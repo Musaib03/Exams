@@ -1,0 +1,17 @@
+su
+Password
+Visudo
+Access given
+
+1. sudo apt update
+2. sudo apt install ns2
+   (select y)
+3. man ns2(type q)
+4. cd Desktop
+5. sudo dpkg -i filename
+6. Create new folder in Desktop and copy those 4 files and paste it in the new folder we just now created on desktop
+7.cd CN
+8.ns tcp.tcl
+9.ns udp.tcl
+10.ns linkstat.tcl
+11.ns linkfail.tcl
