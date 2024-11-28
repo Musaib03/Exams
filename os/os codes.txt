@@ -1,0 +1,963 @@
+fcfs
+
+#include <stdio.h>
+
+struct Process {
+    int id;
+    int arrival_time;
+    int burst_time;
+    int completion_time;
+    int turnaround_time;
+    int waiting_time;
+};
+
+void sortProcessesByArrivalTime(struct Process processes[], int n) {
+    // Bubble sort based on arrival time
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (processes[j].arrival_time > processes[j + 1].arrival_time) {
+                struct Process temp = processes[j];
+                processes[j] = processes[j + 1];
+                processes[j + 1] = temp;
+            }
+        }
+    }
+}
+
+void calculateCompletionTime(struct Process processes[], int n) {
+    int current_time = 0;
+    for (int i = 0; i < n; i++) {
+        if (current_time < processes[i].arrival_time)
+            current_time = processes[i].arrival_time;
+        processes[i].completion_time = current_time + processes[i].burst_time;
+        current_time = processes[i].completion_time;
+    }
+}
+
+void calculateTurnaroundTime(struct Process processes[], int n) {
+    for (int i = 0; i < n; i++) {
+        processes[i].turnaround_time = processes[i].completion_time - processes[i].arrival_time;
+    }
+}
+
+void calculateWaitingTime(struct Process processes[], int n) {
+    for (int i = 0; i < n; i++) {
+        processes[i].waiting_time = processes[i].turnaround_time - processes[i].burst_time;
+    }
+}
+
+void displayProcessDetails(struct Process processes[], int n) {
+    printf("Process\t Arrival Time\t Burst Time\t Completion Time\t Turnaround Time\t Waiting Time\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t\t %d\t\t %d\t\t %d\t\t\t %d\t\t\t %d\n", processes[i].id, processes[i].arrival_time,
+               processes[i].burst_time, processes[i].completion_time, processes[i].turnaround_time,
+               processes[i].waiting_time);
+    }
+}
+
+int main() {
+    int n;
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    struct Process processes[n];
+
+    printf("Enter Arrival Time and Burst Time for each process:\n");
+    for (int i = 0; i < n; i++) {
+        processes[i].id = i + 1;
+        printf("Arrival Time for Process %d: ", i + 1);
+        scanf("%d", &processes[i].arrival_time);
+        printf("Burst Time for Process %d: ", i + 1);
+        scanf("%d", &processes[i].burst_time);
+    }
+
+    // Sort processes by arrival time
+    sortProcessesByArrivalTime(processes, n);
+
+    // Calculate completion time for each process
+    calculateCompletionTime(processes, n);
+
+    // Calculate turnaround time for each process
+    calculateTurnaroundTime(processes, n);
+
+    // Calculate waiting time for each process
+    calculateWaitingTime(processes, n);
+
+    // Display process details
+    displayProcessDetails(processes, n);
+
+    // Calculate average waiting time
+    float total_waiting_time = 0;
+    for (int i = 0; i < n; i++) {
+        total_waiting_time += processes[i].waiting_time;
+    }
+    float avg_waiting_time = total_waiting_time / n;
+    printf("\nAverage Waiting Time: %.2f\n", avg_waiting_time);
+
+    // Calculate average turnaround time
+    float total_turnaround_time = 0;
+    for (int i = 0; i < n; i++) {
+        total_turnaround_time += processes[i].turnaround_time;
+    }
+    float avg_turnaround_time = total_turnaround_time / n;
+    printf("Average Turnaround Time: %.2f\n", avg_turnaround_time);
+
+    return 0;
+}
+
+
+
+sjf
+
+
+
+
+#include <stdio.h>
+
+// Function to sort processes according to their burst time
+void sortProcesses(int n, int processes[], int burst_time[]) {
+    int temp;
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (burst_time[i] > burst_time[j]) {
+                // Swap burst time
+                temp = burst_time[i];
+                burst_time[i] = burst_time[j];
+                burst_time[j] = temp;
+                
+                // Swap process ID
+                temp = processes[i];
+                processes[i] = processes[j];
+                processes[j] = temp;
+            }
+        }
+    }
+}
+
+// Function to find the waiting time for all processes
+void findWaitingTime(int n, int burst_time[], int waiting_time[]) {
+    waiting_time[0] = 0;  // First process doesn't wait
+    
+    // Calculating waiting time
+    for (int i = 1; i < n; i++) {
+        waiting_time[i] = burst_time[i - 1] + waiting_time[i - 1];
+    }
+}
+
+// Function to calculate turnaround time
+void findTurnAroundTime(int n, int burst_time[], int waiting_time[], int turn_around_time[]) {
+    for (int i = 0; i < n; i++) {
+        turn_around_time[i] = burst_time[i] + waiting_time[i];
+    }
+}
+
+// Function to calculate and display average waiting and turnaround time
+void findAverageTime(int processes[], int n, int burst_time[]) {
+    int waiting_time[n], turn_around_time[n];
+    int total_waiting_time = 0, total_turnaround_time = 0;
+
+    // Sort processes by their burst times (Shortest Job First)
+    sortProcesses(n, processes, burst_time);
+
+    // Find waiting times
+    findWaitingTime(n, burst_time, waiting_time);
+
+    // Find turnaround times
+    findTurnAroundTime(n, burst_time, waiting_time, turn_around_time);
+
+    // Display the results
+    printf("Processes   Burst Time   Waiting Time   Turnaround Time\n");
+    for (int i = 0; i < n; i++) {
+        total_waiting_time += waiting_time[i];
+        total_turnaround_time += turn_around_time[i];
+        printf("    %d\t\t%d\t\t%d\t\t%d\n", processes[i], burst_time[i], waiting_time[i], turn_around_time[i]);
+    }
+
+    // Calculate and display average waiting and turnaround time
+    printf("\nAverage Waiting Time: %.2f", (float)total_waiting_time / n);
+    printf("\nAverage Turnaround Time: %.2f\n", (float)total_turnaround_time / n);
+}
+
+// Main function
+int main() {
+    int n;
+    
+    // Input number of processes
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    int processes[n], burst_time[n];
+
+    // Input burst times for each process
+    for (int i = 0; i < n; i++) {
+        processes[i] = i + 1;  // Assign process IDs sequentially
+        printf("Enter burst time for process %d: ", i + 1);
+        scanf("%d", &burst_time[i]);
+    }
+
+    // Calculate and display average waiting and turnaround time
+    findAverageTime(processes, n, burst_time);
+
+    return 0;
+}
+
+
+
+SRTF
+
+
+
+#include <stdio.h>
+#include <limits.h>  // For INT_MAX
+
+typedef struct {
+    int pid;    // Process ID
+    int bt;     // Burst Time
+    int at;     // Arrival Time
+    int rt;     // Remaining Time
+    int wt;     // Waiting Time
+    int tat;    // Turnaround Time
+    int completed; // Flag to check if the process is completed
+} Process;
+
+void findWaitingTime(Process proc[], int n) {
+    int completed = 0, t = 0, min_rt = INT_MAX;
+    int shortest = -1, finish_time;
+    int check = 0;
+
+    // Initialize remaining times and completion status
+    for (int i = 0; i < n; i++) {
+        proc[i].rt = proc[i].bt;
+        proc[i].completed = 0;
+    }
+
+    while (completed != n) {
+        // Find process with minimum remaining time at current time t
+        for (int j = 0; j < n; j++) {
+            if ((proc[j].at <= t) && !proc[j].completed && (proc[j].rt < min_rt)) {
+                min_rt = proc[j].rt;
+                shortest = j;
+                check = 1;
+            }
+        }
+
+        // If no process is ready to execute, increment time
+        if (check == 0) {
+            t++;
+            continue;
+        }
+
+        // Decrease remaining time of the selected process
+        proc[shortest].rt--;
+
+        // Update minimum remaining time
+        min_rt = proc[shortest].rt;
+        if (min_rt == 0) {
+            min_rt = INT_MAX;
+        }
+
+        // If a process finishes, mark it as completed
+        if (proc[shortest].rt == 0) {
+            completed++;
+            check = 0;
+
+            // Calculate finish time of the process
+            finish_time = t + 1;
+
+            // Calculate waiting time
+            proc[shortest].wt = finish_time - proc[shortest].bt - proc[shortest].at;
+            if (proc[shortest].wt < 0) {
+                proc[shortest].wt = 0;
+            }
+
+            // Mark the process as completed
+            proc[shortest].completed = 1;
+        }
+
+        // Increment the time
+        t++;
+    }
+}
+
+void findTurnAroundTime(Process proc[], int n) {
+    // Calculate Turnaround time for each process
+    for (int i = 0; i < n; i++) {
+        proc[i].tat = proc[i].bt + proc[i].wt;
+    }
+}
+
+void findAvgTime(Process proc[], int n) {
+    int total_wt = 0, total_tat = 0;
+
+    // Function to find waiting time of all processes
+    findWaitingTime(proc, n);
+
+    // Function to find turnaround time for all processes
+    findTurnAroundTime(proc, n);
+
+    // Display processes along with all details
+    printf("Processes  Burst Time  Arrival Time  Waiting Time  Turnaround Time\n");
+
+    // Calculate total waiting time and total turnaround time
+    for (int i = 0; i < n; i++) {
+        total_wt += proc[i].wt;
+        total_tat += proc[i].tat;
+        printf(" %d\t\t%d\t\t%d\t\t%d\t\t%d\n", proc[i].pid, proc[i].bt, proc[i].at, proc[i].wt, proc[i].tat);
+    }
+
+    printf("\nAverage waiting time = %f", (float)total_wt / (float)n);
+    printf("Average turnaround time = %f\n", (float)total_tat / (float)n);
+}
+
+int main() {
+    int n;
+
+    // Asking user for the number of processes
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+
+    Process proc[n];
+
+    // Input burst time and arrival time for each process
+    for (int i = 0; i < n; i++) {
+        printf("Enter process ID for process %d: ", i + 1);
+        scanf("%d", &proc[i].pid);
+
+        printf("Enter burst time for process %d: ", i + 1);
+        scanf("%d", &proc[i].bt);
+
+        printf("Enter arrival time for process %d: ", i + 1);
+        scanf("%d", &proc[i].at);
+    }
+
+    // Call the function to calculate average waiting and turnaround times
+    findAvgTime(proc, n);
+
+    return 0;
+}
+ 
+
+round robin 
+
+
+#include <stdio.h>
+
+typedef struct {
+    int pid;    // Process ID
+    int bt;     // Burst Time
+    int at;     // Arrival Time
+    int rt;     // Remaining Time
+    int wt;     // Waiting Time
+    int tat;    // Turnaround Time
+} Process;
+
+void findWaitingTime(Process proc[], int n, int quantum) {
+    int t = 0;  // Current time
+    int remaining = n;  // Count of remaining processes
+    int flag;
+
+    // Initialize remaining burst times and waiting times
+    for (int i = 0; i < n; i++) {
+        proc[i].rt = proc[i].bt;
+        proc[i].wt = 0;
+    }
+
+    while (remaining > 0) {
+        flag = 0;
+        for (int i = 0; i < n; i++) {
+            if (proc[i].rt > 0) {  // Process is not finished
+                if (proc[i].rt > quantum) {
+                    // Execute process for the time quantum
+                    t += quantum;
+                    proc[i].rt -= quantum;
+                } else {
+                    // Process finishes execution
+                    t += proc[i].rt;
+                    proc[i].wt = t - proc[i].bt - proc[i].at; // Calculate waiting time
+                    if (proc[i].wt < 0) {
+                        proc[i].wt = 0;  // Ensure no negative waiting time
+                    }
+                    proc[i].rt = 0;  // Process is finished
+                    remaining--;  // One less remaining process
+                }
+                flag = 1;  // Indicates that at least one process was processed
+            }
+        }
+        // If no process was processed, increment time (to handle idle CPU state)
+        if (flag == 0) {
+            t++;
+        }
+    }
+}
+
+void findTurnAroundTime(Process proc[], int n) {
+    // Calculate Turnaround time for each process
+    for (int i = 0; i < n; i++) {
+        proc[i].tat = proc[i].bt + proc[i].wt;
+    }
+}
+
+void findAvgTime(Process proc[], int n, int quantum) {
+    int total_wt = 0, total_tat = 0;
+
+    // Function to find waiting time of all processes
+    findWaitingTime(proc, n, quantum);
+
+    // Function to find turnaround time for all processes
+    findTurnAroundTime(proc, n);
+
+    // Display processes along with all details
+    printf("\nProcesses  Burst Time  Arrival Time  Waiting Time  Turnaround Time\n");
+
+    // Calculate total waiting time and total turnaround time
+    for (int i = 0; i < n; i++) {
+        total_wt += proc[i].wt;
+        total_tat += proc[i].tat;
+        printf(" %d\t\t%d\t\t%d\t\t%d\t\t%d\n", proc[i].pid, proc[i].bt, proc[i].at, proc[i].wt, proc[i].tat);
+    }
+
+    printf("\nAverage waiting time = %f", (float)total_wt / (float)n);
+    printf("Average turnaround time = %f\n", (float)total_tat / (float)n);
+}
+
+int main() {
+    int n, quantum;
+
+    // Asking user for the number of processes and the quantum time
+    printf("Enter number of processes: ");
+    scanf("%d", &n);
+
+    Process proc[n];
+
+    // Input burst time and arrival time for each process
+    for (int i = 0; i < n; i++) {
+        printf("Enter process ID for process %d: ", i + 1);
+        scanf("%d", &proc[i].pid);
+
+        printf("Enter burst time for process %d: ", i + 1);
+        scanf("%d", &proc[i].bt);
+
+        printf("Enter arrival time for process %d: ", i + 1);
+        scanf("%d", &proc[i].at);
+    }
+
+    // Asking user for the time quantum
+    printf("Enter the time quantum: ");
+    scanf("%d", &quantum);
+
+    // Call the function to calculate average waiting and turnaround times
+    findAvgTime(proc, n, quantum);
+
+    return 0;
+}
+
+
+priority scheduling
+
+
+#include <stdio.h>
+
+typedef struct {
+    int pid;    // Process ID
+    int bt;     // Burst Time
+    int priority; // Priority
+    int wt;     // Waiting Time
+    int tat;    // Turnaround Time
+} Process;
+
+void findWaitingTime(Process proc[], int n) {
+    proc[0].wt = 0; // Waiting time for first process is 0
+
+    // Calculating waiting time
+    for (int i = 1; i < n; i++) {
+        proc[i].wt = proc[i - 1].bt + proc[i - 1].wt;
+    }
+}
+
+void findTurnAroundTime(Process proc[], int n) {
+    // Calculating turnaround time
+    for (int i = 0; i < n; i++) {
+        proc[i].tat = proc[i].bt + proc[i].wt;
+    }
+}
+
+void sortProcessesByPriority(Process proc[], int n) {
+    Process temp;
+    // Sorting based on priority
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (proc[i].priority > proc[j].priority) {
+                temp = proc[i];
+                proc[i] = proc[j];
+                proc[j] = temp;
+            }
+        }
+    }
+}
+
+void findAvgTime(Process proc[], int n) {
+    int total_wt = 0, total_tat = 0;
+
+    // Function to find waiting time of all processes
+    findWaitingTime(proc, n);
+
+    // Function to find turn around time for all processes
+    findTurnAroundTime(proc, n);
+
+    // Display processes along with all details
+    printf("Processes  Burst time  Waiting time  Turn around time\n");
+
+    // Calculate total waiting time and total turn around time
+    for (int i = 0; i < n; i++) {
+        total_wt += proc[i].wt;
+        total_tat += proc[i].tat;
+        printf(" %d\t\t%d\t\t%d\t\t%d\n", proc[i].pid, proc[i].bt, proc[i].wt, proc[i].tat);
+    }
+
+    printf("\nAverage waiting time = %f", (float)total_wt / (float)n);
+    printf("\nAverage turn around time = %f", (float)total_tat / (float)n);
+}
+
+int main() {
+    Process proc[] = {{1, 10, 2}, {2, 5, 0}, {3, 8, 1}};
+    int n = sizeof(proc) / sizeof(proc[0]);
+
+    sortProcessesByPriority(proc, n);
+
+    printf("Order in which processes get executed based on priority:\n");
+    for (int i = 0; i < n; i++) {
+        printf("Process ID: %d Priority: %d\n", proc[i].pid, proc[i].priority);
+    }
+
+    findAvgTime(proc, n);
+    return 0;
+}
+
+
+non priority scheduling
+
+
+#include <stdio.h>
+
+typedef struct {
+    int pid;  // Process ID
+    int bt;   // Burst Time
+    int wt;   // Waiting Time
+    int tat;  // Turnaround Time
+} Process;
+
+void findWaitingTime(Process proc[], int n) {
+    proc[0].wt = 0; // Waiting time for the first process is 0
+
+    // Calculating waiting time for each subsequent process
+    for (int i = 1; i < n; i++) {
+        proc[i].wt = proc[i - 1].bt + proc[i - 1].wt;
+    }
+}
+
+void findTurnAroundTime(Process proc[], int n) {
+    // Calculating turnaround time for each process
+    for (int i = 0; i < n; i++) {
+        proc[i].tat = proc[i].bt + proc[i].wt;
+    }
+}
+
+void findAvgTime(Process proc[], int n) {
+    int total_wt = 0, total_tat = 0;
+
+    // Function to find waiting time for all processes
+    findWaitingTime(proc, n);
+
+    // Function to find turn around time for all processes
+    findTurnAroundTime(proc, n);
+
+    // Display processes along with all details
+    printf("Processes  Burst time  Waiting time  Turn around time\n");
+
+    // Calculate total waiting time and total turn around time
+    for (int i = 0; i < n; i++) {
+        total_wt += proc[i].wt;
+        total_tat += proc[i].tat;
+        printf(" %d\t\t%d\t\t%d\t\t%d\n", proc[i].pid, proc[i].bt, proc[i].wt, proc[i].tat);
+    }
+
+    printf("\nAverage waiting time = %f", (float)total_wt / (float)n);
+    printf(" \nAverage turn around time = %f", (float)total_tat / (float)n);
+}
+
+int main() {
+    Process proc[] = {{1, 24}, {2, 3}, {3, 3}};
+    int n = sizeof(proc) / sizeof(proc[0]);
+
+    findAvgTime(proc, n);
+    return 0;
+}
+
+
+preemptive 
+
+
+#include <stdio.h>
+#include <limits.h>
+
+typedef struct {
+    int pid;    // Process ID
+    int bt;     // Burst Time
+    int at;     // Arrival Time
+    int rt;     // Remaining Time
+    int wt;     // Waiting Time
+    int tat;    // Turnaround Time
+} Process;
+
+void findWaitingTime(Process proc[], int n) {
+    int complete = 0, t = 0, min_rt = INT_MAX;
+    int shortest = 0, finish_time;
+    int check = 0;
+    int wt_sum = 0;
+
+    // Initialize remaining times
+    for (int i = 0; i < n; i++) {
+        proc[i].rt = proc[i].bt;
+    }
+
+    while (complete != n) {
+        // Find the process with minimum remaining time at t
+        for (int j = 0; j < n; j++) {
+            if ((proc[j].at <= t) && (proc[j].rt < min_rt) && proc[j].rt > 0) {
+                min_rt = proc[j].rt;
+                shortest = j;
+                check = 1;
+            }
+        }
+
+        if (check == 0) {
+            t++;
+            continue;
+        }
+
+        // Decrease remaining time by one
+        proc[shortest].rt--;
+
+        // Update minimum
+        min_rt = proc[shortest].rt;
+        if (min_rt == 0) {
+            min_rt = INT_MAX;
+        }
+
+        // If a process gets completely executed
+        if (proc[shortest].rt == 0) {
+            complete++;
+            check = 0;
+
+            finish_time = t + 1;
+
+            // Calculate waiting time
+            proc[shortest].wt = finish_time - proc[shortest].bt - proc[shortest].at;
+            if (proc[shortest].wt < 0) {
+                proc[shortest].wt = 0;
+            }
+        }
+        t++;
+    }
+}
+
+void findTurnAroundTime(Process proc[], int n) {
+    for (int i = 0; i < n; i++) {
+        proc[i].tat = proc[i].bt + proc[i].wt;
+    }
+}
+
+void findAvgTime(Process proc[], int n) {
+    int total_wt = 0, total_tat = 0;
+
+    // Function to find waiting time of all processes
+    findWaitingTime(proc, n);
+
+    // Function to find turn around time for all processes
+    findTurnAroundTime(proc, n);
+
+    // Display processes along with all details
+    printf("Processes  Burst Time  Arrival Time  Waiting Time  Turnaround Time\n");
+
+    // Calculate total waiting time and total turnaround time
+    for (int i = 0; i < n; i++) {
+        total_wt += proc[i].wt;
+        total_tat += proc[i].tat;
+        printf(" %d\t\t%d\t\t%d\t\t%d\t\t%d\n", proc[i].pid, proc[i].bt, proc[i].at, proc[i].wt, proc[i].tat);
+    }
+
+    printf("\nAverage waiting time = %f", (float)total_wt / (float)n);
+    printf("\nAverage turnaround time = %f", (float)total_tat / (float)n);
+}
+
+int main() {
+    Process proc[] = {{1, 6, 2}, {2, 8, 5}, {3, 7, 1}, {4, 3, 0}};
+    int n = sizeof(proc) / sizeof(proc[0]);
+
+    findAvgTime(proc, n);
+    return 0;
+}
+
+
+non preemptive
+
+
+#include <stdio.h>
+
+typedef struct {
+    int pid;    // Process ID
+    int bt;     // Burst Time
+    int wt;     // Waiting Time
+    int tat;    // Turnaround Time
+} Process;
+
+void findWaitingTime(Process proc[], int n) {
+    int wt_sum = 0;
+
+    // Waiting time for first process is 0
+    proc[0].wt = 0;
+
+    // Calculating waiting time for each process
+    for (int i = 1; i < n; i++) {
+        proc[i].wt = proc[i - 1].bt + proc[i - 1].wt;
+    }
+}
+
+void findTurnAroundTime(Process proc[], int n) {
+    // Calculating turnaround time for each process
+    for (int i = 0; i < n; i++) {
+        proc[i].tat = proc[i].bt + proc[i].wt;
+    }
+}
+
+void sortProcessesByBurstTime(Process proc[], int n) {
+    Process temp;
+    // Sorting based on burst time
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (proc[i].bt > proc[j].bt) {
+                temp = proc[i];
+                proc[i] = proc[j];
+                proc[j] = temp;
+            }
+        }
+    }
+}
+
+void findAvgTime(Process proc[], int n) {
+    int total_wt = 0, total_tat = 0;
+
+    // Function to find waiting time of all processes
+    findWaitingTime(proc, n);
+
+    // Function to find turn around time for all processes
+    findTurnAroundTime(proc, n);
+
+    // Display processes along with all details
+    printf("Processes  Burst time  Waiting time  Turn around time\n");
+
+    // Calculate total waiting time and total turn around time
+    for (int i = 0; i < n; i++) {
+        total_wt += proc[i].wt;
+        total_tat += proc[i].tat;
+        printf(" %d\t\t%d\t\t%d\t\t%d\n", proc[i].pid, proc[i].bt, proc[i].wt, proc[i].tat);
+    }
+
+    printf("\nAverage waiting time = %f", (float)total_wt / (float)n);
+    printf(" \nAverage turn around time = %f", (float)total_tat / (float)n);
+}
+
+int main() {
+    Process proc[] = {{1, 6}, {2, 8}, {3, 7}, {4, 3}};
+    int n = sizeof(proc) / sizeof(proc[0]);
+
+    sortProcessesByBurstTime(proc, n);
+
+    findAvgTime(proc, n);
+    return 0;
+}
+
+
+bankers algorithm 
+
+
+
+#include <stdio.h>
+
+// Function to find the need matrix
+void calculateNeed(int need[10][10], int max[10][10], int allot[10][10], int n, int m) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            need[i][j] = max[i][j] - allot[i][j];
+        }
+    }
+}
+
+// Function to check if all resources can be allocated safely
+int isSafe(int processes[], int avail[], int max[10][10], int allot[10][10], int n, int m) {
+    int need[10][10];
+    calculateNeed(need, max, allot, n, m);
+
+    int finish[10] = {0};  // Indicates if process has finished or not
+    int safeSeq[10];       // Safe sequence of process execution
+    int work[10];
+
+    // Initialize work = available
+    for (int i = 0; i < m; i++) {
+        work[i] = avail[i];
+    }
+
+    int count = 0;
+    while (count < n) {
+        int found = 0;
+        for (int p = 0; p < n; p++) {
+            if (finish[p] == 0) {
+                int canAllocate = 1;
+                for (int j = 0; j < m; j++) {
+                    if (need[p][j] > work[j]) {
+                        canAllocate = 0;
+                        break;
+                    }
+                }
+                if (canAllocate) {
+                    // If resources can be allocated, mark the process as finished
+                    for (int j = 0; j < m; j++) {
+                        work[j] += allot[p][j];
+                    }
+                    safeSeq[count++] = p;
+                    finish[p] = 1;
+                    found = 1;
+                }
+            }
+        }
+        if (!found) {
+            printf("The system is not in a safe state.\n");
+            return 0;
+        }
+    }
+
+    printf("The system is in a safe state.\nSafe sequence is: ");
+    for (int i = 0; i < n; i++) {
+        printf("P%d ", safeSeq[i]);
+    }
+    printf("\n");
+
+    return 1;
+}
+
+int main() {
+    int n, m;
+
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    printf("Enter the number of resources: ");
+    scanf("%d", &m);
+
+    int processes[10], avail[10];
+    int max[10][10], allot[10][10];
+
+    printf("Enter the allocation matrix:\n");
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            scanf("%d", &allot[i][j]);
+        }
+    }
+
+    printf("Enter the maximum matrix:\n");
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            scanf("%d", &max[i][j]);
+        }
+    }
+
+    printf("Enter the available resources:\n");
+    for (int i = 0; i < m; i++) {
+        scanf("%d", &avail[i]);
+    }
+
+    isSafe(processes, avail, max, allot, n, m);
+
+    return 0;
+}
+
+
+semaphores
+
+
+#include <stdio.h>
+#include <pthread.h>
+#include <semaphore.h>
+
+#define BUFFER_SIZE 5  // Size of the buffer
+
+int buffer[BUFFER_SIZE];  // Buffer to hold items
+int count = 0;  // Count to keep track of items in the buffer
+
+sem_t empty;  // Semaphore to check empty slots in the buffer
+sem_t full;   // Semaphore to check full slots in the buffer
+pthread_mutex_t mutex;  // Mutex to protect the buffer (critical section)
+
+void* producer(void* arg) {
+    int item;
+    for (int i = 0; i < 10; i++) {
+        item = i;  // Producing an item (here item = i)
+
+        // Wait for empty slot
+        sem_wait(&empty);
+        pthread_mutex_lock(&mutex);  // Lock the buffer (critical section)
+
+        // Add the item to the buffer
+        buffer[count] = item;
+        printf("Producer produced: %d\n", item);
+        count++;  // Increment the count
+
+        pthread_mutex_unlock(&mutex);  // Unlock the buffer
+        sem_post(&full);  // Signal that the buffer has one more full slot
+
+        sleep(1);  // Simulate the production time
+    }
+}
+
+void* consumer(void* arg) {
+    int item;
+    for (int i = 0; i < 10; i++) {
+        // Wait for full slot
+        sem_wait(&full);
+        pthread_mutex_lock(&mutex);  // Lock the buffer (critical section)
+
+        // Remove the item from the buffer
+        count--;
+        item = buffer[count];
+        printf("Consumer consumed: %d\n", item);
+
+        pthread_mutex_unlock(&mutex);  // Unlock the buffer
+        sem_post(&empty);  // Signal that the buffer has one more empty slot
+
+        sleep(1);  // Simulate the consumption time
+    }
+}
+
+int main() {
+    pthread_t prodThread, consThread;
+
+    // Initialize the semaphores and mutex
+    sem_init(&empty, 0, BUFFER_SIZE);  // Initially, all slots are empty
+    sem_init(&full, 0, 0);  // Initially, no slots are full
+    pthread_mutex_init(&mutex, NULL);  // Initialize mutex
+
+    // Create producer and consumer threads
+    pthread_create(&prodThread, NULL, producer, NULL);
+    pthread_create(&consThread, NULL, consumer, NULL);
+
+    // Wait for both threads to finish
+    pthread_join(prodThread, NULL);
+    pthread_join(consThread, NULL);
+
+    // Destroy the semaphores and mutex
+    sem_destroy(&empty);
+    sem_destroy(&full);
+    pthread_mutex_destroy(&mutex);
+
+    return 0;
+}
